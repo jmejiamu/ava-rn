@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: AppTheme.colors.ava_primary,
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    // paddingHorizontal: 24,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",

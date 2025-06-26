@@ -15,6 +15,7 @@ export const AppTheme = {
     ava_success: "#00E096",
     ava_warning: "#FFAA00",
     ava_info: "#0095FF",
+    ava_background: "#F2F0ED",
   },
 };
 
