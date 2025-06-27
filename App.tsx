@@ -1,9 +1,16 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import AppNavigator from "./src/navigation/AppNavigator";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 export default function App() {
-  return <AppNavigator />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppNavigator />
+    </QueryClientProvider>
+  );
 }
 
 const styles = StyleSheet.create({

@@ -22,21 +22,23 @@ import AccountDetailsCard from "@/components/AccountDetailsCard";
 import BalanceCard from "@/components/BalanceCard";
 import OpenCreditCard from "@/components/OpenCreditCard";
 import Badge from "@/components/Badge";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "@/navigation/AppNavigator";
 
 const screenWidth = Dimensions.get("window").width;
 const cardWidth = Platform.OS === "ios" ? screenWidth * 0.4 : screenWidth * 0.4; // Card occupies 80% of the screen width
 
 const HomeScreen = () => {
   const [loading, setLoading] = useState(false);
-  const [value, setValue] = useState(80);
-
-  // Adjust this to map slider value to position on screen
-  const thumbPosition = ((value - 0) / (100 - 0)) * (screenWidth - 40);
 
   const handlePress = () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 1500);
   };
+
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const data = [
     { value: 140 },
@@ -94,7 +96,7 @@ const HomeScreen = () => {
         <ScrollView>
           <Header
             title="Home"
-            onSettingsPress={() => console.log("Settings Pressed")}
+            onSettingsPress={() => navigation.navigate("EmploymentInfo")}
           />
           <View style={styles.cardContainer}>
             <CreditScoreCard
