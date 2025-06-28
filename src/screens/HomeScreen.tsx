@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LineChart } from "react-native-gifted-charts";
 import {
@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   FlatList,
+  TextInput,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -25,12 +26,31 @@ import Badge from "@/components/Badge";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 const screenWidth = Dimensions.get("window").width;
 const cardWidth = Platform.OS === "ios" ? screenWidth * 0.4 : screenWidth * 0.4; // Card occupies 80% of the screen width
 
 const HomeScreen = () => {
   const [loading, setLoading] = useState(false);
+
+  // ref
+  const bottomSheetRef = useRef<BottomSheet>(null);
+
+  // Add this function to open the bottom sheet
+  const openBottomSheet = () => {
+    console.log("Opening bottom sheet");
+    bottomSheetRef.current?.expand();
+  };
+  const closeBottomSheet = () => {
+    console.log("Closing bottom sheet");
+    bottomSheetRef.current?.close();
+  };
+
+  // callbacks
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log("handleSheetChanges", index);
+  }, []);
 
   const handlePress = () => {
     setLoading(true);
@@ -86,13 +106,6 @@ const HomeScreen = () => {
     >
       <StatusBar style="light" />
       <View style={styles.container}>
-        {/* <Text style={styles.title}>Welcome to AVA RN Challenge!</Text> */}
-        {/* <ActionButton
-        title={loading ? "Loading..." : "Get Started"}
-        onPress={handlePress}
-        loading={loading}
-        style={styles.button}
-      /> */}
         <ScrollView>
           <Header
             title="Home"
@@ -207,8 +220,75 @@ const HomeScreen = () => {
             <Text style={styles.sectionTitle}>Open credit card accounts</Text>
           </View>
           <OpenCreditCard />
+          <ActionButton
+            title="Open Bottom Sheet"
+            onPress={() => openBottomSheet()}
+            style={{ margin: 20 }}
+          />
           <View style={{ marginTop: 40 }} />
         </ScrollView>
+
+        <BottomSheet
+          ref={bottomSheetRef}
+          onChange={handleSheetChanges}
+          index={-1}
+          enablePanDownToClose
+          backgroundStyle={{
+            backgroundColor: AppTheme.colors.ava_light_purple,
+            borderRadius: 25,
+            marginHorizontal: 10,
+          }}
+          handleIndicatorStyle={{
+            backgroundColor: AppTheme.colors.ava_light_purple,
+          }}
+          handleComponent={() => (
+            <View
+              style={{
+                width: 50,
+                height: 4,
+                backgroundColor: AppTheme.colors.ava_light_purple,
+                borderRadius: 2,
+                alignSelf: "center",
+                marginTop: 8,
+              }}
+            />
+          )}
+        >
+          <BottomSheetView style={styles.contentContainerSheet}>
+            <Text
+              style={{
+                fontWeight: "600",
+                fontSize: FontSizes.md,
+                textAlign: "center",
+                marginTop: 12,
+                marginBottom: 28,
+              }}
+            >
+              Give us feedback
+            </Text>
+            <TextInput
+              placeholder="Type here..."
+              multiline
+              numberOfLines={10}
+              style={{
+                backgroundColor: "white",
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: "#e5e5e5",
+                padding: 12,
+                fontSize: 16,
+                height: 200,
+                textAlignVertical: "top",
+                marginBottom: 24,
+              }}
+            />
+            <ActionButton
+              title="Send feedback"
+              onPress={closeBottomSheet}
+              style={{ margin: 20 }}
+            />
+          </BottomSheetView>
+        </BottomSheet>
       </View>
     </SafeAreaView>
   );
@@ -282,5 +362,17 @@ const styles = StyleSheet.create({
   },
   button: {
     minWidth: 180,
+  },
+
+  /// Bottom Sheet Styles
+  containerSheet: {
+    flex: 1,
+    zIndex: 1000,
+  },
+  contentContainerSheet: {
+    flex: 1,
+    paddingHorizontal: 16,
+    backgroundColor: AppTheme.colors.ava_background,
+    borderRadius: 25,
   },
 });
