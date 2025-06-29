@@ -11,7 +11,6 @@ const defaultEmploymentInfo: EmploymentInfo = {
   payFrequency: "Bi-weekly",
   employerAddress: "Apple One Apple Park Way, Cupertino, CA 95014",
   timeWithEmployer: "1 year 3 months",
-  //   nextPayday: "Sept 22nd, 2023 (Friday)",
   nextPayday: "2025-07-26T19:10:04.000Z",
   isDirectDeposit: true,
 };

@@ -12,8 +12,24 @@ const ranges = [
   { label: "<75%", color: AppTheme.colors.ava_light_red },
 ];
 
-const BalanceCard = () => {
-  const status = "Good";
+interface BalanceCardProps {
+  utilization: number;
+}
+
+const BalanceCard = (props: BalanceCardProps) => {
+  const { utilization } = props;
+
+  let status = "";
+  if (utilization >= 0 && utilization <= 29) {
+    status = "Excellent";
+  } else if (utilization >= 30 && utilization <= 49) {
+    status = "Medium";
+  } else if (utilization >= 50 && utilization <= 75) {
+    status = "Bad";
+  } else {
+    status = "";
+  }
+
   return (
     <View style={styles.cardContainer}>
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
@@ -30,7 +46,7 @@ const BalanceCard = () => {
         <AnimatedCircularProgress
           size={110}
           width={9}
-          fill={67}
+          fill={utilization}
           tintColor={AppTheme.colors.ava_secondary}
           onAnimationComplete={() => console.log("onAnimationComplete")}
           duration={1500}

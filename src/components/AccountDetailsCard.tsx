@@ -1,13 +1,23 @@
 import { Dimensions, Platform, StyleSheet, Text, View } from "react-native";
-import React, { useState } from "react";
 import Slider from "@react-native-community/slider";
-import { AppTheme } from "@/theme/colors";
+import React, { useState } from "react";
+
 import { FontSizes } from "@/theme/fontSizes";
+import { AppTheme } from "@/theme/colors";
 
 const screenWidth = Dimensions.get("window").width;
 
-const AccountDetailsCard = () => {
-  const [value, setValue] = useState(80);
+interface AccountDetailsCardProps {
+  spendLimit: number;
+  utilization: number;
+  creditLimit: number;
+  balance: number;
+}
+
+const AccountDetailsCard = (props: AccountDetailsCardProps) => {
+  const { spendLimit, utilization, creditLimit, balance } = props;
+  const [value, setValue] = useState(40);
+
   const thumbPosition = ((value - 0) / (100 - 0)) * (screenWidth - 90);
   return (
     <View style={styles.cardContainer}>
@@ -32,7 +42,7 @@ const AccountDetailsCard = () => {
           thumbImage={undefined}
         />
         <View style={{ flexDirection: "row" }}>
-          <Text style={styles.spendTxt}>Spend limit: ${100 - value}</Text>
+          <Text style={styles.spendTxt}>Spend limit: ${value}</Text>
           <Text style={styles.whyTxt}> Why is it different?</Text>
         </View>
       </View>
@@ -44,11 +54,13 @@ const AccountDetailsCard = () => {
         }}
       >
         <View>
-          <Text style={styles.moneyTxt}>$30</Text>
+          <Text style={styles.moneyTxt}>${balance}</Text>
           <Text>Balance</Text>
         </View>
         <View>
-          <Text style={[styles.moneyTxt, { textAlign: "right" }]}>$30</Text>
+          <Text style={[styles.moneyTxt, { textAlign: "right" }]}>
+            ${creditLimit}
+          </Text>
           <Text>Credit limit</Text>
         </View>
       </View>
@@ -64,7 +76,7 @@ const AccountDetailsCard = () => {
         >
           Utilization
         </Text>
-        <Text style={styles.moneyTxt}>4%</Text>
+        <Text style={styles.moneyTxt}>{utilization}%</Text>
       </View>
     </View>
   );

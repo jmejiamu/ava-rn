@@ -1,25 +1,26 @@
+import React from "react";
 import {
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import React from "react";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp, useRoute } from "@react-navigation/native";
-
-import { ActionButton } from "@/components/ActionButton";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { useQuery } from "@tanstack/react-query";
+
+import { RootStackParamList } from "@/navigation/AppNavigator";
+import { ActionButton } from "@/components/ActionButton";
+import { getEmploymentInfo } from "@/api/employment";
+import { EmploymentInfo } from "@/types/employment";
+import { formatDate } from "../../utils/formatDate";
 import { FontSizes } from "@/theme/fontSizes";
 import { AppTheme } from "@/theme/colors";
-import { getEmploymentInfo, updateEmploymentInfo } from "@/api/employment";
-import { EmploymentInfo } from "@/types/employment";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "@/navigation/AppNavigator";
-import { formatDate } from "../utils/formatDate";
+import { styles } from "./styles/style";
 
 type EmploymentInfoScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -34,15 +35,9 @@ const EmploymentInfoScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<EmploymentInfoScreenRouteProp>();
-  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery<EmploymentInfo>({
     queryKey: ["employmentInfo"],
     queryFn: getEmploymentInfo,
-  });
-  const mutation = useMutation<EmploymentInfo, unknown, EmploymentInfo>({
-    mutationFn: updateEmploymentInfo,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["employmentInfo"] }),
   });
 
   const handleConfirm = () => {
@@ -57,36 +52,16 @@ const EmploymentInfoScreen = () => {
     }, 300);
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Text>Loading...</Text>
-      </SafeAreaView>
-    );
-  }
+  if (isLoading) return <ActivityIndicator style={{ flex: 1 }} />;
   if (isError || !data) {
     return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <SafeAreaView style={styles.loadingSafeContainer}>
         <Text>Error loading employment info.</Text>
       </SafeAreaView>
     );
   }
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: AppTheme.colors.ava_background }}
-    >
+    <SafeAreaView style={styles.safeAreaContainer}>
       <View style={{ marginHorizontal: 16 }}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="black" />
@@ -139,7 +114,7 @@ const EmploymentInfoScreen = () => {
           </View>
           <View style={{ marginTop: 24, marginBottom: 8 }}>
             <Text style={styles.title}>Is your pay a direct deposit?</Text>
-            <Text style={styles.subTitle}>
+            <Text style={[styles.subTitle, { marginBottom: 16 }]}>
               {data.isDirectDeposit ? "Yes" : "No"}
             </Text>
           </View>
@@ -151,6 +126,7 @@ const EmploymentInfoScreen = () => {
           />
           <View style={{ margin: 8 }} />
           <ActionButton title="Confirm" onPress={handleConfirm} />
+          <View style={{ height: 50 }} />
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -158,14 +134,3 @@ const EmploymentInfoScreen = () => {
 };
 
 export default EmploymentInfoScreen;
-
-const styles = StyleSheet.create({
-  subTitle: {
-    fontSize: FontSizes.md,
-    color: AppTheme.colors.ava_text_primary_dark,
-  },
-  title: {
-    color: AppTheme.colors.ava_text_primary_light,
-    fontSize: FontSizes.xs,
-  },
-});
