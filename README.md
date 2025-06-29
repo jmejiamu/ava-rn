@@ -2,6 +2,9 @@
 
 This project is a React Native application built with Expo.
 
+## Web access
+https://ava-rn-challenge--77x0v6cp1q.expo.app
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v16 or later recommended)
