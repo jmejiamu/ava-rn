@@ -1,8 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import Feather from "@expo/vector-icons/Feather";
-import { AppTheme } from "@/theme/colors";
+
+import Settings from "../../assets/icons/Settings.svg";
 import { FontSizes } from "@/theme/fontSizes";
+import { AppTheme } from "@/theme/colors";
 
 interface HeaderProps {
   title: string;
@@ -14,7 +15,7 @@ export const Header = (props: HeaderProps) => {
   return (
     <View style={styles.header}>
       <TouchableOpacity onPress={onSettingsPress}>
-        <Feather name="settings" size={20} color="white" />
+        <Settings width={20} height={20} />
       </TouchableOpacity>
       <Text style={styles.title}>{title}</Text>
     </View>

@@ -1,32 +1,33 @@
 import {
-  StyleSheet,
   Text,
   View,
   TextInput,
   ScrollView,
-  Button,
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  LogBox,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEmploymentInfo, updateEmploymentInfo } from "@/api/employment";
-import { EmploymentInfo } from "@/types/employment";
-import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DropDownPicker from "react-native-dropdown-picker";
-import { AppTheme } from "@/theme/colors";
-import { FontSizes } from "@/theme/fontSizes";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { formatDate } from "@/utils/formatDate";
-import Calendar from "../../assets/icons/Calendar.svg";
-import YesRadioButton from "../../assets/icons/YesRadioButton.svg";
-import NoRadioBtn from "../../assets/icons/NoRadioBtn.svg";
+import { useNavigation } from "@react-navigation/native";
+
+import { getEmploymentInfo, updateEmploymentInfo } from "@/api/employment";
+import YesRadioButton from "../../../assets/icons/YesRadioButton.svg";
+import { useEmploymentForm } from "@/hooks/useEmploymentForm";
+import NoRadioBtn from "../../../assets/icons/NoRadioBtn.svg";
+import Calendar from "../../../assets/icons/Calendar.svg";
 import { ActionButton } from "@/components/ActionButton";
-import isEqual from "lodash.isequal";
-import { z } from "zod";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { EmploymentInfo } from "@/types/employment";
+import { employmentInfoSchema } from "./validation";
+import { formatDate } from "@/utils/formatDate";
+import { FontSizes } from "@/theme/fontSizes";
+import { AppTheme } from "@/theme/colors";
+import { styles } from "./styles/styles";
 
 const EditEmploymentInfo = () => {
   const navigation = useNavigation();
@@ -45,9 +46,9 @@ const EditEmploymentInfo = () => {
       Alert.alert("Error", "Failed to update employment info.");
     },
   });
+  const { form, errors, setErrors, isFormChanged, handleChange } =
+    useEmploymentForm(data);
 
-  const [form, setForm] = useState<EmploymentInfo | null>(null);
-  const [initialForm, setInitialForm] = useState<EmploymentInfo | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [payFreqOpen, setPayFreqOpen] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -90,34 +91,6 @@ const EditEmploymentInfo = () => {
     }))
   );
 
-  const employmentInfoSchema = z.object({
-    employmentType: z.string().min(1, "Employment type is required"),
-    employer: z.string().min(2, "Employer is required"),
-    jobTitle: z.string().min(2, "Job title is required"),
-    grossAnnualIncome: z.string().min(1, "Gross annual income is required"),
-    payFrequency: z.string().min(1, "Pay frequency is required"),
-    nextPayday: z.string().min(1, "Next payday is required"),
-    isDirectDeposit: z.boolean(),
-    employerAddress: z.string().min(2, "Employer address is required"),
-    timeWithEmployer: z.string().min(1, "Time with employer is required"),
-  });
-
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  useEffect(() => {
-    if (data) {
-      setForm(data);
-      setInitialForm(data);
-    }
-  }, [data]);
-
-  if (isLoading || !form) return <ActivityIndicator style={{ flex: 1 }} />;
-  if (isError) return <Text>Error loading employment info.</Text>;
-
-  const handleChange = (key: keyof EmploymentInfo, value: string | boolean) => {
-    setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
-  };
-
   const handleSave = () => {
     if (!form) return;
     const result = employmentInfoSchema.safeParse(form);
@@ -133,12 +106,15 @@ const EditEmploymentInfo = () => {
     mutation.mutate(form);
   };
 
-  const isFormChanged = !isEqual(form, initialForm);
+  useEffect(() => {
+    LogBox.ignoreLogs(["VirtualizedLists should never be nested"]);
+  }, []);
+
+  if (isLoading || !form) return <ActivityIndicator style={{ flex: 1 }} />;
+  if (isError) return <Text>Error loading employment info.</Text>;
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: AppTheme.colors.ava_background }}
-    >
+    <SafeAreaView style={styles.safeAreaContainer}>
       <TouchableOpacity
         style={{ marginHorizontal: 16 }}
         onPress={() => navigation.goBack()}
@@ -233,15 +209,7 @@ const EditEmploymentInfo = () => {
           />
           <TouchableOpacity
             onPress={() => setShowDatePicker(true)}
-            style={{
-              position: "absolute",
-              right: 0,
-              top: 0,
-              height: "100%",
-              justifyContent: "center",
-              alignItems: "center",
-              width: 44,
-            }}
+            style={styles.calendarContainer}
           >
             <Calendar width={20} height={20} />
           </TouchableOpacity>
@@ -250,14 +218,7 @@ const EditEmploymentInfo = () => {
           <Text style={{ color: "red" }}>{errors.nextPayday}</Text>
         )}
         <Text style={styles.label}>Is your pay a direct deposit?</Text>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 16,
-            marginTop: 24,
-          }}
-        >
+        <View style={styles.directDepContainer}>
           <TouchableOpacity
             onPress={() => handleChange("isDirectDeposit", true)}
             style={{ flexDirection: "row", alignItems: "center" }}
@@ -268,15 +229,7 @@ const EditEmploymentInfo = () => {
             ) : (
               <NoRadioBtn width={24} height={24} />
             )}
-            <Text
-              style={{
-                marginLeft: 4,
-                color: AppTheme.colors.ava_text_primary_dark,
-                fontSize: FontSizes.md,
-              }}
-            >
-              Yes
-            </Text>
+            <Text style={styles.directDepTxt}>Yes</Text>
           </TouchableOpacity>
           <View style={{ marginHorizontal: 50 }} />
           <TouchableOpacity
@@ -289,18 +242,9 @@ const EditEmploymentInfo = () => {
             ) : (
               <NoRadioBtn width={24} height={24} />
             )}
-            <Text
-              style={{
-                marginLeft: 4,
-                color: AppTheme.colors.ava_text_primary_dark,
-                fontSize: FontSizes.md,
-              }}
-            >
-              No
-            </Text>
+            <Text style={styles.directDepTxt}>No</Text>
           </TouchableOpacity>
         </View>
-        {/* No error for boolean field */}
         <Text style={styles.label}>Employer address</Text>
         <TextInput
           style={[
@@ -386,7 +330,7 @@ const EditEmploymentInfo = () => {
         {errors.timeWithEmployer && (
           <Text style={{ color: "red" }}>{errors.timeWithEmployer}</Text>
         )}
-
+        <View style={{ height: 104 }} />
         <ActionButton
           title="Continue"
           onPress={handleSave}
@@ -415,32 +359,3 @@ const EditEmploymentInfo = () => {
 };
 
 export default EditEmploymentInfo;
-
-const styles = StyleSheet.create({
-  title: {
-    fontSize: FontSizes.xxxl,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: AppTheme.colors.ava_text_primary_dark,
-  },
-  container: {
-    padding: 16,
-    backgroundColor: AppTheme.colors.ava_background,
-    flexGrow: 1,
-  },
-  label: {
-    fontSize: FontSizes.md,
-    fontWeight: "600",
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 8,
-    backgroundColor: AppTheme.colors.ava_white,
-    fontSize: FontSizes.md,
-  },
-});
