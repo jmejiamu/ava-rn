@@ -26,6 +26,7 @@ import YesRadioButton from "../../assets/icons/YesRadioButton.svg";
 import NoRadioBtn from "../../assets/icons/NoRadioBtn.svg";
 import { ActionButton } from "@/components/ActionButton";
 import isEqual from "lodash.isequal";
+import { z } from "zod";
 
 const EditEmploymentInfo = () => {
   const navigation = useNavigation();
@@ -89,6 +90,20 @@ const EditEmploymentInfo = () => {
     }))
   );
 
+  const employmentInfoSchema = z.object({
+    employmentType: z.string().min(1, "Employment type is required"),
+    employer: z.string().min(2, "Employer is required"),
+    jobTitle: z.string().min(2, "Job title is required"),
+    grossAnnualIncome: z.string().min(1, "Gross annual income is required"),
+    payFrequency: z.string().min(1, "Pay frequency is required"),
+    nextPayday: z.string().min(1, "Next payday is required"),
+    isDirectDeposit: z.boolean(),
+    employerAddress: z.string().min(2, "Employer address is required"),
+    timeWithEmployer: z.string().min(1, "Time with employer is required"),
+  });
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
   useEffect(() => {
     if (data) {
       setForm(data);
@@ -104,7 +119,18 @@ const EditEmploymentInfo = () => {
   };
 
   const handleSave = () => {
-    if (form) mutation.mutate(form);
+    if (!form) return;
+    const result = employmentInfoSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: { [key: string]: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) fieldErrors[err.path[0]] = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+    mutation.mutate(form);
   };
 
   const isFormChanged = !isEqual(form, initialForm);
@@ -132,28 +158,47 @@ const EditEmploymentInfo = () => {
           }
           setItems={() => {}}
           containerStyle={{ marginBottom: 12 }}
-          style={{ borderColor: "#ccc", padding: 16, borderRadius: 8 }}
+          style={{
+            borderColor: errors.employmentType ? "red" : "#ccc",
+            padding: 16,
+            borderRadius: 8,
+          }}
           dropDownContainerStyle={{ borderColor: "#ccc" }}
           scrollViewProps={{ nestedScrollEnabled: true }}
         />
+        {errors.employmentType && (
+          <Text style={{ color: "red" }}>{errors.employmentType}</Text>
+        )}
         <Text style={styles.label}>Employer</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.employer && { borderColor: "red" }]}
           value={form.employer}
           onChangeText={(v) => handleChange("employer", v)}
         />
+        {errors.employer && (
+          <Text style={{ color: "red" }}>{errors.employer}</Text>
+        )}
         <Text style={styles.label}>Job title</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.jobTitle && { borderColor: "red" }]}
           value={form.jobTitle}
           onChangeText={(v) => handleChange("jobTitle", v)}
         />
+        {errors.jobTitle && (
+          <Text style={{ color: "red" }}>{errors.jobTitle}</Text>
+        )}
         <Text style={styles.label}>Gross annual income</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            errors.grossAnnualIncome && { borderColor: "red" },
+          ]}
           value={form.grossAnnualIncome}
           onChangeText={(v) => handleChange("grossAnnualIncome", v)}
         />
+        {errors.grossAnnualIncome && (
+          <Text style={{ color: "red" }}>{errors.grossAnnualIncome}</Text>
+        )}
         <Text style={styles.label}>Pay frequency</Text>
         <DropDownPicker
           open={payFreqOpen}
@@ -163,19 +208,24 @@ const EditEmploymentInfo = () => {
           setValue={(cb) => handleChange("payFrequency", cb(form.payFrequency))}
           setItems={() => {}}
           containerStyle={{ marginBottom: 12 }}
-          style={{ borderColor: "#ccc", padding: 16, borderRadius: 8 }}
+          style={{
+            borderColor: errors.payFrequency ? "red" : "#ccc",
+            padding: 16,
+            borderRadius: 8,
+          }}
           dropDownContainerStyle={{ borderColor: "#ccc" }}
           scrollViewProps={{ nestedScrollEnabled: true }}
         />
+        {errors.payFrequency && (
+          <Text style={{ color: "red" }}>{errors.payFrequency}</Text>
+        )}
         <Text style={styles.label}>Next payday</Text>
         <View style={{ position: "relative", marginBottom: 8 }}>
           <TextInput
             style={[
               styles.input,
-              {
-                paddingRight: 44, // space for icon
-                marginBottom: 0,
-              },
+              errors.nextPayday && { borderColor: "red" },
+              { paddingRight: 44, marginBottom: 0 },
             ]}
             value={formatDate(form.nextPayday)}
             editable={false}
@@ -196,22 +246,9 @@ const EditEmploymentInfo = () => {
             <Calendar width={20} height={20} />
           </TouchableOpacity>
         </View>
-        <DateTimePickerModal
-          isVisible={showDatePicker}
-          mode="date"
-          date={
-            form.nextPayday && !isNaN(new Date(form.nextPayday).getTime())
-              ? new Date(form.nextPayday)
-              : new Date()
-          }
-          onConfirm={(selectedDate: Date) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              handleChange("nextPayday", selectedDate.toISOString());
-            }
-          }}
-          onCancel={() => setShowDatePicker(false)}
-        />
+        {errors.nextPayday && (
+          <Text style={{ color: "red" }}>{errors.nextPayday}</Text>
+        )}
         <Text style={styles.label}>Is your pay a direct deposit?</Text>
         <View
           style={{
@@ -263,14 +300,21 @@ const EditEmploymentInfo = () => {
             </Text>
           </TouchableOpacity>
         </View>
+        {/* No error for boolean field */}
         <Text style={styles.label}>Employer address</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            errors.employerAddress && { borderColor: "red" },
+          ]}
           value={form.employerAddress}
           multiline
           numberOfLines={3}
           onChangeText={(v) => handleChange("employerAddress", v)}
         />
+        {errors.employerAddress && (
+          <Text style={{ color: "red" }}>{errors.employerAddress}</Text>
+        )}
         <Text
           style={[
             styles.label,
@@ -303,7 +347,11 @@ const EditEmploymentInfo = () => {
               setItems={setYears}
               placeholder="Years"
               containerStyle={{ marginBottom: 0 }}
-              style={{ borderColor: "#ccc", borderRadius: 8, padding: 16 }}
+              style={{
+                borderColor: errors.timeWithEmployer ? "red" : "#ccc",
+                borderRadius: 8,
+                padding: 16,
+              }}
               dropDownContainerStyle={{ borderColor: "#ccc" }}
             />
           </View>
@@ -326,11 +374,18 @@ const EditEmploymentInfo = () => {
               setItems={setMonths}
               placeholder="Months"
               containerStyle={{ marginBottom: 0 }}
-              style={{ borderColor: "#ccc", borderRadius: 8, padding: 16 }}
+              style={{
+                borderColor: errors.timeWithEmployer ? "red" : "#ccc",
+                borderRadius: 8,
+                padding: 16,
+              }}
               dropDownContainerStyle={{ borderColor: "#ccc" }}
             />
           </View>
         </View>
+        {errors.timeWithEmployer && (
+          <Text style={{ color: "red" }}>{errors.timeWithEmployer}</Text>
+        )}
 
         <ActionButton
           title="Continue"
@@ -339,6 +394,22 @@ const EditEmploymentInfo = () => {
           style={{ marginTop: 16 }}
         />
       </ScrollView>
+      <DateTimePickerModal
+        isVisible={showDatePicker}
+        mode="date"
+        date={
+          form.nextPayday && !isNaN(new Date(form.nextPayday).getTime())
+            ? new Date(form.nextPayday)
+            : new Date()
+        }
+        onConfirm={(selectedDate: Date) => {
+          setShowDatePicker(false);
+          if (selectedDate) {
+            handleChange("nextPayday", selectedDate.toISOString());
+          }
+        }}
+        onCancel={() => setShowDatePicker(false)}
+      />
     </SafeAreaView>
   );
 };

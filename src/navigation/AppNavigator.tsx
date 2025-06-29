@@ -7,7 +7,7 @@ import EditEmploymentInfo from "@/screens/EditEmploymentInfo";
 
 export type RootStackParamList = {
   Home: undefined;
-  EmploymentInfo: undefined;
+  EmploymentInfo: { onOpenBottomSheet?: () => void } | undefined;
   EditEmploymentInfo: undefined;
 };
 
