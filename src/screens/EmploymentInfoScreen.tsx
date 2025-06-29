@@ -9,6 +9,7 @@ import React from "react";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { RouteProp, useRoute } from "@react-navigation/native";
 
 import { ActionButton } from "@/components/ActionButton";
 import { useNavigation } from "@react-navigation/native";
@@ -20,9 +21,19 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
 import { formatDate } from "../utils/formatDate";
 
+type EmploymentInfoScreenRouteProp = RouteProp<
+  RootStackParamList,
+  "EmploymentInfo"
+> & {
+  params?: {
+    onOpenBottomSheet?: () => void;
+  };
+};
+
 const EmploymentInfoScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<EmploymentInfoScreenRouteProp>();
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery<EmploymentInfo>({
     queryKey: ["employmentInfo"],
@@ -33,6 +44,18 @@ const EmploymentInfoScreen = () => {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["employmentInfo"] }),
   });
+
+  const handleConfirm = () => {
+    navigation.goBack();
+    setTimeout(() => {
+      const params = route.params as
+        | { onOpenBottomSheet?: () => void }
+        | undefined;
+      if (params && typeof params.onOpenBottomSheet === "function") {
+        params.onOpenBottomSheet();
+      }
+    }, 300);
+  };
 
   if (isLoading) {
     return (
@@ -127,10 +150,7 @@ const EmploymentInfoScreen = () => {
             outlined
           />
           <View style={{ margin: 8 }} />
-          <ActionButton
-            title="Confirm"
-            onPress={() => console.log("Confirm Employment Info Pressed")}
-          />
+          <ActionButton title="Confirm" onPress={handleConfirm} />
         </ScrollView>
       </View>
     </SafeAreaView>

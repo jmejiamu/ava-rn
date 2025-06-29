@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { z } from "zod";
 
 import { CreditScoreCard } from "@/components/CreditScoreCard";
 import { ActionButton } from "@/components/ActionButton";
@@ -31,8 +32,14 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 const screenWidth = Dimensions.get("window").width;
 const cardWidth = Platform.OS === "ios" ? screenWidth * 0.4 : screenWidth * 0.4; // Card occupies 80% of the screen width
 
+const feedbackSchema = z.object({
+  feedback: z.string().min(10, "Feedback must be at least 10 characters."),
+});
+
 const HomeScreen = () => {
   const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   // ref
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -99,6 +106,17 @@ const HomeScreen = () => {
     },
   ];
 
+  const handleSendFeedback = () => {
+    const result = feedbackSchema.safeParse({ feedback });
+    if (!result.success) {
+      setFeedbackError(result.error.errors[0].message);
+      return;
+    }
+    setFeedbackError(null);
+    closeBottomSheet();
+    setFeedback("");
+  };
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: AppTheme.colors.ava_primary }}
@@ -109,7 +127,11 @@ const HomeScreen = () => {
         <ScrollView>
           <Header
             title="Home"
-            onSettingsPress={() => navigation.navigate("EmploymentInfo")}
+            onSettingsPress={() =>
+              navigation.navigate("EmploymentInfo", {
+                onOpenBottomSheet: openBottomSheet,
+              })
+            }
           />
           <View style={styles.cardContainer}>
             <CreditScoreCard
@@ -161,13 +183,11 @@ const HomeScreen = () => {
               rulesColor="#e5e5e5"
               yAxisLabelPrefix=""
               yAxisLabelSuffix=""
-              // yAxisOffset={600}
               noOfSections={2}
               maxValue={700}
               animationDuration={1500}
               spacing={Platform.OS === "ios" ? 19 : 19}
               height={100}
-              // width={width * 0.7}
               disableScroll
             />
 
@@ -220,11 +240,7 @@ const HomeScreen = () => {
             <Text style={styles.sectionTitle}>Open credit card accounts</Text>
           </View>
           <OpenCreditCard />
-          <ActionButton
-            title="Open Bottom Sheet"
-            onPress={() => openBottomSheet()}
-            style={{ margin: 20 }}
-          />
+
           <View style={{ marginTop: 40 }} />
         </ScrollView>
 
@@ -270,21 +286,34 @@ const HomeScreen = () => {
               placeholder="Type here..."
               multiline
               numberOfLines={10}
+              value={feedback}
+              onChangeText={(text) => setFeedback(text)}
               style={{
                 backgroundColor: "white",
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: "#e5e5e5",
+                borderColor: feedbackError ? "red" : "#e5e5e5",
                 padding: 12,
                 fontSize: 16,
                 height: 200,
                 textAlignVertical: "top",
-                marginBottom: 24,
+                marginBottom: 8,
               }}
             />
+            {feedbackError && (
+              <Text
+                style={{
+                  color: "red",
+                  marginBottom: 16,
+                  textAlign: "center",
+                }}
+              >
+                {feedbackError}
+              </Text>
+            )}
             <ActionButton
               title="Send feedback"
-              onPress={closeBottomSheet}
+              onPress={handleSendFeedback}
               style={{ margin: 20 }}
             />
           </BottomSheetView>
